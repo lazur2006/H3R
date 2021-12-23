@@ -42,14 +42,7 @@ class WorkerThread_searchPicnicCallback(QThread):
         global picnicResult
         global items
         items = searchPicnicItem(shoppingCart)
-        picnicResult = setPicnicItem(items)
-        #updatePicnicTable()
-        
-        
-        
-        
-        
-        
+        picnicResult = setPicnicItem(items)        
         
 # class WorkerThread_putOrderCallback(QtCore.QThread):
 #     def run(self):
@@ -146,7 +139,21 @@ class MainH3R(QWidget):
         self.rbUsa.toggled.connect(lambda: self.LOCALE_Callback(2))
         self.SetActToSeed.clicked.connect(self.SetActToSeed_Callback)
         self.picnicPassword.returnPressed.connect(self.saveLoginData_Callback)
-        self.Help.clicked.connect(self.Help_Callback)   
+        self.Help.clicked.connect(self.Help_Callback)
+        
+        self.RecipeGroupType.setStyleSheet("background-color: black;"
+                                           "color: white;"
+                                           "padding: 2px;"
+                                           "font-weight: bold;"
+                                           "border-radius : 5px")
+        self.RecipeGroupType.setText("Premium")
+        
+        self.NameContainer.setStyleSheet("background-color: #f2f2f2;"
+                                          "border-radius : 5px")
+        self.IwantThisBanner.setStyleSheet("background-color: #f2f2f2;"
+                                           "border-radius : 5px")
+        self.RecipeModeContainer.setStyleSheet("background-color: #f2f2f2;"
+                                           "border-radius : 5px")
         
         
         LOCALE_IDX = 1
@@ -201,7 +208,7 @@ class MainH3R(QWidget):
         self._popflag = False
         
         
-        self.resize(int(QApplication.desktop().size().width()*0.8),int(QApplication.desktop().size().height()*0.7))
+        self.resize(int(QApplication.desktop().size().width()*0.75),int(QApplication.desktop().size().height()*0.8))
 
     def Help_Callback(self):
         #os.system(os.getcwd()+"/"+path)
