@@ -10,6 +10,19 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QPushButton, QProgressBar, QVBoxLayout, QLabel, QApplication
 import time
 import numpy as np
+import re
+from requests_html import HTMLSession
+
+class Auth:
+    def __init__(self):
+        super(Auth,self).__init()
+    
+    def bearer(self):
+        url = "https://hellofresh.de"
+        session = HTMLSession()
+        response = session.get(url)
+        regex = r"\"accessToken\":\"([a-zA-Z_0-9.-]*)\""
+        return(re.findall(regex, response.html.html, re.MULTILINE))
 
 class TQDM:
     def __init__(self,r):
@@ -21,7 +34,7 @@ class TQDM:
         rate = self.tq.format_dict["rate"]
         remaining = (self.tq.total - self.tq.n) / rate if rate and self.tq.total else 0  # Seconds*        
         remaining = time.strftime('%H:%M:%S', time.gmtime(remaining))
-        return remaining
+        return remaining    
 
 class Thread(QThread):
     _signal = pyqtSignal(int)
@@ -68,13 +81,15 @@ class Thread(QThread):
               "country": country
             }
             
+            self._state_msg.emit("Get fresh bearer auth token...")
+            bToken= Auth.bearer(self)
             # apply random bearer
             headers = {
-              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NDA0MDkyMTUsImlhdCI6MTYzNzc3OTQ3MiwiaXNzIjoic2VuZiIsImp0aSI6ImM0ZDRiYzU1LTU3MDgtNDY4OS04MDI4LTdhMDdmOTI3ZGI0ZSJ9.rxQ9FEm2Pdm5QNYf9aZLJF3Q_7kJ9B_9Y6AgTejVW4I'
+              'Authorization': 'Bearer '+bToken[0]
               }
             
             # find out how many recipes are present (only german DE market)
-            response = session.request("GET", url, headers=headers, params=payload).json()
+            response = requests.get(url, headers=headers, params=payload).json()
             total = response['total']
             iterations = int(response['total']/limit)
             residuals = response['total']%limit
@@ -132,6 +147,9 @@ class Thread(QThread):
             recipesFinal=[]
             ingredients=[]
             steps=[]
+            tags=[]
+            label=[]
+            headline=[]
             for i in range(len(recipesFiltred)):
                 for j in range(len(recipesFiltred[i]['ingredients'])):
                     ingredient=str(recipesFiltred[i]['ingredients'][j]['name'])
@@ -140,9 +158,29 @@ class Thread(QThread):
                     ingredients.append([amount,unit,ingredient])
                 for k in range(len(recipesFiltred[i]['steps'])):
                     steps.append(recipesFiltred[i]['steps'][k]['instructionsMarkdown'])
-                recipesFinal.append([recipesFiltred[i]['name'],ingredients,recipesFiltred[i]['websiteUrl'],steps,"https://img.hellofresh.com/c_fit,f_auto,fl_lossy,h_1100,q_auto,w_2600/hellofresh_s3"+recipesFiltred[i]['imagePath']])#,recipesFiltred[i]['headline']])
+                for item in recipesFiltred[i]['tags']:
+                    tags.append(item['name'])
+                    
+                try:
+                    label.append(recipesFiltred[i]['label']['text'])
+                except:
+                    label.append("")
+                
+                if recipesFiltred[i]['headline'] != None:  
+                    try:
+                        headline.append(recipesFiltred[i]['headline'])
+                    except:
+                        headline.append("")
+                else:
+                    headline.append("")
+
+                
+                recipesFinal.append([recipesFiltred[i]['name'],ingredients,recipesFiltred[i]['websiteUrl'],steps,"https://img.hellofresh.com/c_fit,f_auto,fl_lossy,h_1100,q_auto,w_2600/hellofresh_s3"+recipesFiltred[i]['imagePath'],tags,label,headline])
                 ingredients=[]
                 steps=[]
+                tags=[]
+                label=[]
+                headline=[]
                 
             recipes=[]
             recipes=recipesFinal

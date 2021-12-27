@@ -146,7 +146,7 @@ class MainH3R(QWidget):
                                            "padding: 2px;"
                                            "font-weight: bold;"
                                            "border-radius : 5px")
-        self.RecipeGroupType.setText("Premium")
+        
         
         self.NameContainer.setStyleSheet("background-color: #f2f2f2;"
                                           "border-radius : 5px")
@@ -207,9 +207,24 @@ class MainH3R(QWidget):
         self._popframe = None
         self._popflag = False
         
+        self.setTags()
         
         self.resize(int(QApplication.desktop().size().width()*0.75),int(QApplication.desktop().size().height()*0.8))
-
+    def setTags(self):
+        global results
+        global DataPackage
+        
+        tags=DataPackage[7][results[1][CntRecipe - 1]]
+        if any(tags):
+            for item in tags:
+                self.RecipeGroupType.setVisible(True)
+                self.RecipeGroupType.setText(item)
+        else:
+            self.RecipeGroupType.setVisible(False)
+            self.RecipeGroupType.setText("")
+            
+        self.headline.setText(DataPackage[8][results[1][CntRecipe - 1]][0])
+        
     def Help_Callback(self):
         #os.system(os.getcwd()+"/"+path)
         
@@ -286,7 +301,7 @@ class MainH3R(QWidget):
         
         self.SumCosts.setText("summarized costs " + picnicResult[2] + " €")
         
-        self.tabWidget.setCurrentIndex(1)
+        self.tabWidget.setCurrentIndex(2)
         self.putOrder.setEnabled(True)
            
     def ResetGui(self):
@@ -357,9 +372,13 @@ class MainH3R(QWidget):
         self.RecipeNumber.setText("Recipe Number = " + str(results[1][0]))
     
         self.RecipeCount.setText("Recipe 1 of " + str(len(results[0])))
+        
+        self.setTags()
+        
         # Load image
         pixmap = QPixmap(IMG_FOLDER_LOCALE[LOCALE_IDX] + str(results[1][0]) + ".jpg")
         self.ImageLabel.setPixmap(pixmap.scaled(1000, 500, Qt.KeepAspectRatio))
+        self.tabWidget.setCurrentIndex(0)
         
     def DeleteSelection_Callback(self):
         self.SelectedItemsList.clear()
@@ -383,6 +402,9 @@ class MainH3R(QWidget):
         self.RecipeCount.setText("Recipe 1 of " + str(len(results[0])))
         self.modeStatus.setText("- RANDOM RECIPE MODE -")
         self.mode.setVisible(False)
+        
+        self.setTags()
+        
         # Load image
         pixmap = QPixmap(IMG_FOLDER_LOCALE[LOCALE_IDX] + str(results[1][0]) + ".jpg")
         self.ImageLabel.setPixmap(pixmap.scaled(1000, 500, Qt.KeepAspectRatio))
@@ -426,7 +448,9 @@ class MainH3R(QWidget):
         self.RecipeCount.setText("Recipe "+ str(CntRecipe) + " of " + str(MaxValue))
         self.RecipeName.setText(results[0][CntRecipe - 1])
         self.RecipeNumber.setText("Recipe Number = " + str(results[1][CntRecipe - 1]))
-    
+        
+        self.setTags()
+        
         # Load image
         pixmap = QPixmap(IMG_FOLDER_LOCALE[LOCALE_IDX] + str(results[1][CntRecipe - 1]) + ".jpg")
         self.ImageLabel.setPixmap(pixmap.scaled(1000, 500, Qt.KeepAspectRatio))
@@ -448,7 +472,9 @@ class MainH3R(QWidget):
         self.RecipeCount.setText("Recipe "+ str(CntRecipe) + " of " + str(MaxValue))
         self.RecipeName.setText(results[0][CntRecipe - 1])
         self.RecipeNumber.setText("Recipe Number = " + str(results[1][CntRecipe - 1]))
-    
+        
+        self.setTags()
+        
         # Load image
         pixmap = QPixmap(IMG_FOLDER_LOCALE[LOCALE_IDX] + str(results[1][CntRecipe - 1]) + ".jpg")
         self.ImageLabel.setPixmap(pixmap.scaled(1000, 500, Qt.KeepAspectRatio))
@@ -601,6 +627,8 @@ class MainH3R(QWidget):
         #self.modeStatus.setText("- RANDOM RECIPE "+ str(results[4]) +" -")
         self.modeStatus.setText("- RANDOM RECIPE MODE -")
         self.mode.setVisible(False)
+        
+        self.setTags()
         
         # Load image
         pixmap = QPixmap(IMG_FOLDER_LOCALE[LOCALE_IDX] + str(results[1][0]) + ".jpg")
