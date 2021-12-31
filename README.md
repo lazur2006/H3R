@@ -1,2 +1,5 @@
 # H3R
-HelloFresh Clone with Picnic REST API integration
+HelloFresh clone with Picnic and REWE REST API integration
+
+Auto update from HelloFresh
+Auto buy function within Picnic or REWE
