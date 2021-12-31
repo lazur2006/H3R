@@ -267,6 +267,9 @@
                        <property name="autoFillBackground">
                         <bool>false</bool>
                        </property>
+                       <property name="styleSheet">
+                        <string notr="true">color: rgb(0, 0, 0)</string>
+                       </property>
                        <property name="text">
                         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Recipe_name&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                        </property>
@@ -309,6 +312,9 @@
                       <font>
                        <pointsize>9</pointsize>
                       </font>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color: rgb(0, 0, 0)</string>
                      </property>
                      <property name="text">
                       <string>headline</string>
@@ -426,6 +432,9 @@
                    </property>
                    <item>
                     <widget class="QCheckBox" name="AddToBasket">
+                     <property name="styleSheet">
+                      <string notr="true">color: rgb(0, 0, 0)</string>
+                     </property>
                      <property name="text">
                       <string>I want this!</string>
                      </property>
@@ -451,6 +460,9 @@
                        <weight>75</weight>
                        <bold>true</bold>
                       </font>
+                     </property>
+                     <property name="styleSheet">
+                      <string notr="true">color: rgb(0, 0, 0)</string>
                      </property>
                      <property name="text">
                       <string>1/X</string>
@@ -592,6 +604,9 @@
                        </property>
                        <item>
                         <widget class="QLabel" name="modeStatus">
+                         <property name="styleSheet">
+                          <string notr="true">color: rgb(0, 0, 0)</string>
+                         </property>
                          <property name="text">
                           <string>- SPECIFIC MODE -</string>
                          </property>
@@ -607,6 +622,9 @@
                            <weight>75</weight>
                            <bold>true</bold>
                           </font>
+                         </property>
+                         <property name="styleSheet">
+                          <string notr="true">color: rgb(0, 0, 0)</string>
                          </property>
                          <property name="text">
                           <string>Mode: Match with recipe XXXX</string>
