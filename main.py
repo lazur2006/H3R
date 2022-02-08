@@ -9,7 +9,7 @@ import os
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.uic import *
-from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QWidget, QLineEdit, QTableWidgetItem, QPushButton, QAbstractScrollArea, QCheckBox, QMenu, QMenuBar, qApp
+from PyQt5.QtWidgets import QMainWindow, QAction, QApplication, QWidget, QLineEdit, QTableWidgetItem, QPushButton, QAbstractScrollArea, QCheckBox, QMenu, QMenuBar, qApp, QShortcut
 from TableModel import TableModel_
 from numpy import array, ones, zeros
 from Init import LoadData
@@ -28,12 +28,8 @@ from PyQt5.uic.Compiler.qtproxies import QtCore, QtWidgets
 import subprocess
 import platform
 
-
 IMG_FOLDER_LOCALE=["img/de-DE/","img/de-DE/","img/en-US/"]
 
-# class WorkerThread_FindCallback(QtCore.QThread):
-#     def run(self):
-#         Find_Callback()
 class WorkerThread_searchPicnicCallback(QThread):    
     def __init__(self):
         super(WorkerThread_searchPicnicCallback, self).__init__()
@@ -42,24 +38,7 @@ class WorkerThread_searchPicnicCallback(QThread):
         global picnicResult
         global items
         items = searchPicnicItem(shoppingCart)
-        picnicResult = setPicnicItem(items)        
-        
-# class WorkerThread_putOrderCallback(QtCore.QThread):
-#     def run(self):
-#         putOrder_Callback()
-# class WorkerThread_CreatePdfFileCallback(QtCore.QThread):
-#     def run(self):
-#         CreatePdfFile_Callback()
-# class WorkerThread_SimplifyIngredientsCallback(QtCore.QThread):
-#     def run(self):
-#         SimplifyIngredients_Callback()     
-# class WorkerThread_searchREWE_Callback(QtCore.QThread):
-#     def run(self):
-#         searchREWE_Callback()   
-# class WorkerThread_ShowRecipes_Callback(QtCore.QThread):
-#     def run(self):
-#         ShowRecipes_Callback()  
-        
+        picnicResult = setPicnicItem(items)
      
 class MainH3R(QWidget):
     def __init__(self):
@@ -67,7 +46,6 @@ class MainH3R(QWidget):
         
         loadUi("bin/form.ui",self)
         self.setWindowIcon(QIcon('app.ico'))
-        
         
         global results
         global MarkedToBasket
@@ -84,27 +62,6 @@ class MainH3R(QWidget):
         global status
         global Recipe_ActualNum
         
-        # self.myQMenuBar = QMenuBar(self)
-        #
-        # Menu_Search = self.myQMenuBar.addMenu('Search')
-        # Menu_Session = self.myQMenuBar.addMenu('Session')
-        #
-        # Action_IngredientSearch = QAction('Ingredient Search', self)        
-        # Action_IngredientSearch.triggered.connect(qApp.quit)
-        # Menu_Search.addAction(Action_IngredientSearch)
-        #
-        # Action_SaveSession = QAction('Save Session', self)        
-        # Action_SaveSession.triggered.connect(qApp.quit)
-        # Menu_Session.addAction(Action_SaveSession)
-        
-        
-        
-        
-        
-        # pixmap = QPixmap("H3RMockup.png")
-        # self.LOGO.setPixmap(pixmap.scaled(100, 50, Qt.KeepAspectRatio))
-        
-        
         self.thread=WorkerThread_searchPicnicCallback()
         self.thread.finished.connect(self.StopWaitState)
         self.thread.finished.connect(self.updatePicnicTable)
@@ -120,17 +77,18 @@ class MainH3R(QWidget):
         self.GenShoppingList.clicked.connect(self.GenShoppingList_Callback)
         self.Next.clicked.connect(self.Next_Callback)
         self.Previous.clicked.connect(self.Previous_Callback)
+        
+        QShortcut(Qt.Key_Right, self, self.Next_Callback)
+        QShortcut(Qt.Key_Left, self, self.Previous_Callback)
+        
         self.AddToBasket.stateChanged.connect(self.AddToBasket_Callback)
-        #-----
         self.searchPicnic.clicked.connect(self.handleThreads)
-        #-----
         self.clearPicnic.clicked.connect(self.clearPicnic_Callback)
         self.putOrder.clicked.connect(self.putOrder_Callback)#(lambda: self.handleThreads(self.putOrder_Callback))
         self.saveLoginData.clicked.connect(self.saveLoginData_Callback)
         self.numCorrelation.valueChanged.connect(self.numCorrelation_Callback)
         self.ShowRndSeed.stateChanged.connect(self.ShowRndSeed_Callback)
         self.ShowRecipeNum.stateChanged.connect(self.ShowRecipeNum_Callback)
-        #self.SimplifyIngredients.stateChanged.connect(self.SimplifyIngredients_Callback)#(lambda: self.handleThreads(self.SimplifyIngredients_Callback))
         self.CreatePdfFile.clicked.connect(self.CreatePdfFile_Callback)#(lambda: handleThreads(CreatePdfFile_Callback))
         self.searchREWE.clicked.connect(self.searchREWE_Callback)#(lambda: self.handleThreads(self.searchREWE_Callback))
         self.CallUpdater.clicked.connect(self.updater_Callback)
@@ -146,16 +104,13 @@ class MainH3R(QWidget):
                                            "padding: 2px;"
                                            "font-weight: bold;"
                                            "border-radius : 5px")
-        
-        
         self.NameContainer.setStyleSheet("background-color: #f2f2f2;"
                                           "border-radius : 5px")
         self.IwantThisBanner.setStyleSheet("background-color: #f2f2f2;"
                                            "border-radius : 5px")
         self.RecipeModeContainer.setStyleSheet("background-color: #f2f2f2;"
                                            "border-radius : 5px")
-        
-        
+
         LOCALE_IDX = 1
         Recipe_ActualNum = 0
         
@@ -210,6 +165,7 @@ class MainH3R(QWidget):
         self.setTags()
         
         self.resize(int(QApplication.desktop().size().width()*0.75),int(QApplication.desktop().size().height()*0.8))
+    
     def setTags(self):
         global results
         global DataPackage
@@ -226,10 +182,8 @@ class MainH3R(QWidget):
         self.headline.setText(DataPackage[8][results[1][CntRecipe - 1]][0])
         
     def Help_Callback(self):
-        #os.system(os.getcwd()+"/"+path)
-        
-        path = 'Help.pdf'
-        
+
+        path = 'Help.pdf'        
         if platform.system() == 'Darwin':       # macOS
             subprocess.call(('open', path))
         elif platform.system() == 'Windows':    # Windows
@@ -245,7 +199,6 @@ class MainH3R(QWidget):
         self.ShowRecipes_Callback(results[1][CntRecipe - 1])
         self.modeStatus.setText("- SPECIFIC RECIPE MODE -")
         self.mode.setVisible(True)
-        
         
     def updatePicnicTable(self):
         global actItemIndex
@@ -675,9 +628,6 @@ class MainH3R(QWidget):
         LOCALE_IDX=LOCALE
         self.ResetGui()
         self.SimplifyIngredients_Callback()
-        
-    # def resizeEvent(sender, event: QResizeEvent):
-    #     print("Resize")
     
     def resizeEvent(self, event):
         print("resize")
@@ -687,12 +637,6 @@ class MainH3R(QWidget):
         except:
             #nada
             print("nada")
-        
-        # Load image
-        # pixmap = QPixmap(IMG_FOLDER_LOCALE[LOCALE_IDX] + str(results[1][0]) + ".jpg")
-        # self.ImageLabel.setPixmap(pixmap.scaled(1000, 500, Qt.KeepAspectRatio))
-        # #QtGui.QMainWindow.resizeEvent(self, event)
-    
 
 app = QApplication(sys.argv)
 a = MainH3R()
