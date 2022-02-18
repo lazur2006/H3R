@@ -256,7 +256,7 @@ class ReweMobileApi():
 
 # if __name__ == '__main__':
 #     api = REWEapi()
-#     auth = api.login('celagab793@aline9.com','11111111',"192.168.0.136")
+#     auth = api.login('xxxxx@xxxxx.com','11111111',"192.168.0.xxx")
 #     basket = api.getBasket()
 #     search_results = api.searchItem("cola")
 #
