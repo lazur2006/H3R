@@ -18,6 +18,7 @@ from CreateShoppingCart import CreateShoppingCart
 import re
 from Search import SearchRecipes
 from picnic import searchPicnicItem, putOrder, doLogin, setPicnicItem
+from rewe import searchReweItem, rewePutOrder, reweDoLogin, setReweItem
 from pandas.core import index
 from future.builtins.misc import round
 from pdf import create
@@ -37,8 +38,17 @@ class WorkerThread_searchPicnicCallback(QThread):
     def run(self):
         global picnicResult
         global items
-        items = searchPicnicItem(shoppingCart)
-        picnicResult = setPicnicItem(items)
+        global use_rewe_api
+        
+        if not use_rewe_api:
+            items = searchPicnicItem(shoppingCart)
+            picnicResult = setPicnicItem(items)
+        else:
+            items = searchReweItem(shoppingCart)
+            if not items=="error,429":
+                picnicResult = setReweItem(items)
+            else:
+                return
      
 class MainH3R(QWidget):
     def __init__(self):
@@ -61,6 +71,10 @@ class MainH3R(QWidget):
         global items
         global status
         global Recipe_ActualNum
+        
+        global use_rewe_api
+        use_rewe_api = True
+        
         
         self.thread=WorkerThread_searchPicnicCallback()
         self.thread.finished.connect(self.StopWaitState)
@@ -86,11 +100,14 @@ class MainH3R(QWidget):
         self.clearPicnic.clicked.connect(self.clearPicnic_Callback)
         self.putOrder.clicked.connect(self.putOrder_Callback)#(lambda: self.handleThreads(self.putOrder_Callback))
         self.saveLoginData.clicked.connect(self.saveLoginData_Callback)
+        
+        self.reweSaveLoginData.clicked.connect(self.reweSaveLoginData_Callback)
+        
         self.numCorrelation.valueChanged.connect(self.numCorrelation_Callback)
         self.ShowRndSeed.stateChanged.connect(self.ShowRndSeed_Callback)
         self.ShowRecipeNum.stateChanged.connect(self.ShowRecipeNum_Callback)
         self.CreatePdfFile.clicked.connect(self.CreatePdfFile_Callback)#(lambda: handleThreads(CreatePdfFile_Callback))
-        self.searchREWE.clicked.connect(self.searchREWE_Callback)#(lambda: self.handleThreads(self.searchREWE_Callback))
+        self.searchREWE.clicked.connect(self.handleThreads)#(lambda: self.handleThreads(self.searchREWE_Callback))
         self.CallUpdater.clicked.connect(self.updater_Callback)
         self.rbGerman.toggled.connect(lambda: self.LOCALE_Callback(0))
         self.rbGermanS.toggled.connect(lambda: self.LOCALE_Callback(1))
@@ -130,6 +147,9 @@ class MainH3R(QWidget):
         pixmap = QPixmap(IMG_FOLDER_LOCALE[LOCALE_IDX] + str(results[1][0]) + ".jpg")
         self.ImageLabel.setPixmap(pixmap.scaled(1000, 500, Qt.KeepAspectRatio))
         
+        
+        
+        
         # Set inital recipe counter value to one
         CntRecipe = 1
         
@@ -141,6 +161,7 @@ class MainH3R(QWidget):
         self.CreatePdfFile.setEnabled(False)
         self.searchREWE.setEnabled(False)
         
+        self.rewePassword.setEchoMode(QLineEdit.Password)
         self.picnicPassword.setEchoMode(QLineEdit.Password)
         self.picnicLoginStatus.setText("")
         
@@ -163,6 +184,8 @@ class MainH3R(QWidget):
         self._popflag = False
         
         self.setTags()
+        
+        self.reweSaveLoginData_Callback()
         
         self.resize(int(QApplication.desktop().size().width()*0.75),int(QApplication.desktop().size().height()*0.8))
     
@@ -479,13 +502,25 @@ class MainH3R(QWidget):
                 if actItemIndex[index.row()] > 0:
                     actItemIndex[index.row()] = actItemIndex[index.row()] - 1
                 #print("Prev: " + str(index.row()))
-            picnicResult[0][index.row()][0] = items[0][index.row()][actItemIndex[index.row()]]['name']
+            try:
+                picnicResult[0][index.row()][0] = items[0][index.row()][actItemIndex[index.row()]]['name']
+            except:
+                picnicResult[0][index.row()][0] = items[0][index.row()][actItemIndex[index.row()]]['productName']
             try:
                 picnicResult[0][index.row()][1] = items[0][index.row()][actItemIndex[index.row()]]['price'] / 100
             except:
-                picnicResult[0][index.row()][1] = items[0][index.row()][actItemIndex[index.row()]]['display_price'] / 100
-            picnicResult[0][index.row()][2] = items[0][index.row()][actItemIndex[index.row()]]['unit_quantity']
-            picnicResult[0][index.row()][3] = items[0][index.row()][actItemIndex[index.row()]]['id']
+                try:
+                    picnicResult[0][index.row()][1] = items[0][index.row()][actItemIndex[index.row()]]['display_price'] / 100
+                except:
+                    picnicResult[0][index.row()][1] = items[0][index.row()][actItemIndex[index.row()]]['_embedded']['articles'][0]['_embedded']['listing']['pricing']['currentRetailPrice']/100
+            try:
+                picnicResult[0][index.row()][2] = items[0][index.row()][actItemIndex[index.row()]]['unit_quantity']
+            except:
+                picnicResult[0][index.row()][2] = items[0][index.row()][actItemIndex[index.row()]]['_embedded']['articles'][0]['_embedded']['listing']['pricing']['grammage']
+            try:
+                picnicResult[0][index.row()][3] = items[0][index.row()][actItemIndex[index.row()]]['id']
+            except:
+                picnicResult[0][index.row()][3] = items[0][index.row()][actItemIndex[index.row()]]['_embedded']['articles'][0]['_embedded']['listing']['id']
             self.picnicTable.setItem(index.row(), 0, QTableWidgetItem(str(picnicResult[0][index.row()][0] + " (" + items[2][index.row()][2] + ")")))
             self.picnicTable.setItem(index.row(), 1, QTableWidgetItem(str(picnicResult[0][index.row()][1]) + " €"))
             self.picnicTable.setItem(index.row(), 2, QTableWidgetItem(str(picnicResult[0][index.row()][2]) + " (" + str(items[2][index.row()][0]) + " " + str(items[2][index.row()][1]) + ")"))
@@ -523,7 +558,10 @@ class MainH3R(QWidget):
     def putOrder_Callback(self):
         global picnicResult
         global orderSelected
-        putOrder(array(picnicResult[0])[[i for i, val in enumerate(orderSelected) if val]])
+        if not use_rewe_api:
+            putOrder(array(picnicResult[0])[[i for i, val in enumerate(orderSelected) if val]])
+        else:
+            rewePutOrder(array(picnicResult[0])[[i for i, val in enumerate(orderSelected) if val]])
         
     def saveLoginData_Callback(self):
         global status
@@ -540,6 +578,26 @@ class MainH3R(QWidget):
                     self.searchPicnic.setEnabled(True)
         else:
             self.picnicLoginStatus.setText("Bad login data")
+            
+    def reweSaveLoginData_Callback(self):
+        global status
+        global shoppingCart
+        status = reweDoLogin([self.reweEmail.text(), self.rewePassword.text(),self.deviceIPLineEdit.text()])
+        
+        if status:
+            self.reweLoginStatus.setText("(advice) >>> your're logged in")
+            self.reweSaveLoginData.setEnabled(False)
+            self.reweEmail.setEnabled(False)
+            self.rewePassword.setEnabled(False)
+            self.deviceIPLineEdit.setEnabled(False)
+            if not shoppingCart:
+                self.searchREWE.setEnabled(False)
+                self.CreatePdfFile.setEnabled(False)
+            else:
+                if status:
+                    self.searchREWE.setEnabled(True)
+        else:
+            self.reweLoginStatus.setText("Bad login data")
             
     def numCorrelation_Callback(self):
         global correlationFactor
